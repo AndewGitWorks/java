@@ -2,6 +2,7 @@ package ui;
 
 import models.User;
 import services.ATMService;
+import services.BenchmarkService;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -10,6 +11,7 @@ public class UserDashboard extends JFrame {
     private User user;
     private JLabel balanceLabel;
     private ATMService atmService;
+    private final BenchmarkService benchmarkService = new BenchmarkService();
 
     public UserDashboard(User user) {
         this.user = user;
@@ -66,7 +68,7 @@ public class UserDashboard extends JFrame {
     }
 
     private JPanel createOperationsPanel() {
-        JPanel panel = new JPanel(new GridLayout(3, 2, 15, 15));
+        JPanel panel = new JPanel(new GridLayout(5, 2, 15, 15));
         panel.setBackground(new Color(20, 25, 35));
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
@@ -77,6 +79,7 @@ public class UserDashboard extends JFrame {
         panel.add(createServiceButton("Перевод на карту", "card_transfer"));
         panel.add(createServiceButton("Перевод пользователю", "user_transfer"));
         panel.add(createServiceButton("Оплата штрафов", "penalty"));
+        panel.add(createServiceButton("Бенчмарк производительности", "benchmark"));
         panel.add(createServiceButton("История операций", "history"));
 
         return panel;
@@ -116,6 +119,7 @@ public class UserDashboard extends JFrame {
                 case "card_transfer" -> handleCardTransfer();
                 case "user_transfer" -> handleUserTransfer();
                 case "penalty" -> handlePenaltyPayment();
+                case "benchmark" -> handleBenchmark();
                 case "history" -> showHistory();
             }
         } catch (Exception ex) {
@@ -128,9 +132,18 @@ public class UserDashboard extends JFrame {
         if (input != null && !input.isEmpty()) {
             try {
                 double amount = Double.parseDouble(input);
-                atmService.withdraw(user, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Снятие выполнено успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.withdrawAsync(user, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Снятие выполнено успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -142,9 +155,18 @@ public class UserDashboard extends JFrame {
         if (input != null && !input.isEmpty()) {
             try {
                 double amount = Double.parseDouble(input);
-                atmService.deposit(user, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Пополнение выполнено успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.depositAsync(user, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Пополнение выполнено успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -166,9 +188,18 @@ public class UserDashboard extends JFrame {
             try {
                 String phone = phoneField.getText();
                 double amount = Double.parseDouble(amountField.getText());
-                atmService.payPhone(user, phone, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.payPhoneAsync(user, phone, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -190,9 +221,18 @@ public class UserDashboard extends JFrame {
             try {
                 String account = accountField.getText();
                 double amount = Double.parseDouble(amountField.getText());
-                atmService.payUtilities(user, account, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.payUtilitiesAsync(user, account, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -214,9 +254,18 @@ public class UserDashboard extends JFrame {
             try {
                 String card = cardField.getText();
                 double amount = Double.parseDouble(amountField.getText());
-                atmService.transferToCard(user, card, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Перевод выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.transferToCardAsync(user, card, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Перевод выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -238,9 +287,18 @@ public class UserDashboard extends JFrame {
             try {
                 String userCard = userField.getText();
                 double amount = Double.parseDouble(amountField.getText());
-                atmService.transferToUser(user, userCard, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Перевод выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.transferToUserAsync(user, userCard, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Перевод выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -262,9 +320,18 @@ public class UserDashboard extends JFrame {
             try {
                 String penalty = penaltyField.getText();
                 double amount = Double.parseDouble(amountField.getText());
-                atmService.payPenalty(user, penalty, amount);
-                updateBalance();
-                JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                atmService.payPenaltyAsync(user, penalty, amount).whenComplete((unused, ex) -> {
+                    SwingUtilities.invokeLater(() -> {
+                        setCursor(Cursor.getDefaultCursor());
+                        if (ex != null) {
+                            JOptionPane.showMessageDialog(this, ex.getCause().getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+                        } else {
+                            updateBalance();
+                            JOptionPane.showMessageDialog(this, "Платеж выполнен успешно!", "Успех", JOptionPane.INFORMATION_MESSAGE);
+                        }
+                    });
+                });
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, ex.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
             }
@@ -275,6 +342,62 @@ public class UserDashboard extends JFrame {
         JOptionPane.showMessageDialog(this, 
             "История операций сохраняется в базе данных.\nПосмотреть можно через админ панель.",
             "История", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void handleBenchmark() {
+        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+        JTextField operationsField = new JTextField("50");
+        JTextField threadsField = new JTextField(String.valueOf(Runtime.getRuntime().availableProcessors()));
+
+        panel.add(new JLabel("Количество операций:"));
+        panel.add(operationsField);
+        panel.add(new JLabel("Потоков для многопоточного режима:"));
+        panel.add(threadsField);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, "Бенчмарк вычислений", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                int operations = Integer.parseInt(operationsField.getText());
+                int threads = Integer.parseInt(threadsField.getText());
+                setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+
+                SwingWorker<BenchmarkService.BenchmarkResult, Void> worker = new SwingWorker<>() {
+                    @Override
+                    protected BenchmarkService.BenchmarkResult doInBackground() {
+                        return benchmarkService.compareBenchmark(operations, threads);
+                    }
+
+                    @Override
+                    protected void done() {
+                        setCursor(Cursor.getDefaultCursor());
+                        try {
+                            BenchmarkService.BenchmarkResult result = get();
+                            JOptionPane.showMessageDialog(UserDashboard.this,
+                                    result.format(),
+                                    "Результаты бенчмарка",
+                                    JOptionPane.INFORMATION_MESSAGE);
+                        } catch (Exception e) {
+                            JOptionPane.showMessageDialog(UserDashboard.this,
+                                    "Ошибка при выполнении бенчмарка: " + getRootErrorMessage(e),
+                                    "Ошибка",
+                                    JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                };
+
+                worker.execute();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Введите корректные числа", "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private String getRootErrorMessage(Throwable throwable) {
+        Throwable root = throwable;
+        while (root.getCause() != null) {
+            root = root.getCause();
+        }
+        return root.getMessage() != null ? root.getMessage() : "Неизвестная ошибка";
     }
 
     private JPanel createBottomPanel() {
