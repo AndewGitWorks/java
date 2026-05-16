@@ -33,6 +33,7 @@ public class DatabaseInitializer {
                     user_id INTEGER,
                     type TEXT,
                     amount REAL,
+                    description TEXT,
                     created_at TEXT
                 )
             """);
@@ -44,6 +45,16 @@ public class DatabaseInitializer {
                     created_at TEXT
                 )
             """);
+
+            stmt.execute("""
+                CREATE TABLE IF NOT EXISTS atm_balance(
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    balance REAL DEFAULT 10000000
+                )
+            """);
+
+            // Инициализировать баланс банкомата если его нет
+            stmt.execute("INSERT OR IGNORE INTO atm_balance (id, balance) VALUES (1, 10000000)");
 
         } catch (Exception e) {
             e.printStackTrace();

@@ -15,4 +15,10 @@ public class Transaction {
         this.amount = amount;
         this.createdAt = createdAt;
     }
+
+    public int getId() { return id; }
+    public int getUserId() { return userId; }
+    public String getType() { return type; }
+    public double getAmount() { return amount; }
+    public String getCreatedAt() { return createdAt; }
 }
